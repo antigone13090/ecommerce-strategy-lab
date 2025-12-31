@@ -1,0 +1,47 @@
+package com.acme.ecom.domain.money;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Objects;
+
+public final class Money {
+    private final BigDecimal value;
+
+    private Money(BigDecimal v) {
+        this.value = v.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public static Money of(String s) {
+        return new Money(new BigDecimal(s));
+    }
+   
+    @JsonValue
+    public BigDecimal asBigDecimal() { return value; }
+
+    public Money plus(Money other) { return new Money(this.value.add(other.value)); }
+
+    public Money minus(Money other) { return new Money(this.value.subtract(other.value)); }
+
+    public Money percent(String pct) {
+        BigDecimal p = new BigDecimal(pct).divide(new BigDecimal("100"), 10, RoundingMode.HALF_UP);
+        return new Money(this.value.multiply(p));
+    }
+
+    public Money times(String factor) {
+        return new Money(this.value.multiply(new BigDecimal(factor)));
+    }
+
+    public int compareTo(Money other) { return this.value.compareTo(other.value); }
+
+    @Override public String toString() { return value.toPlainString(); }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Money)) return false;
+        Money money = (Money) o;
+        return Objects.equals(value, money.value);
+    }
+
+    @Override public int hashCode() { return Objects.hash(value); }
+}

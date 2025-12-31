@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>E-commerce Strategy Lab</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>E-commerce Strategy Lab</h1>
+    <p class="muted">Objectif : tester Strategy (remises + shipping) en conditions “web”.</p>
+
+    <div class="card">
+      <h2>Entrée</h2>
+
+      <div class="grid">
+        <label>
+          Loyalty tier
+          <input id="loyaltyTier" value="GOLD" placeholder="GOLD"/>
+        </label>
+
+        <label>
+          Promo code
+          <input id="promoCode" value="NOEL10" placeholder="NOEL10"/>
+        </label>
+
+        <label>
+          Country
+          <input id="country" value="EU" placeholder="FR / EU / OTHER"/>
+        </label>
+      </div>
+
+      <h3>Items</h3>
+      <table id="itemsTable">
+        <thead>
+          <tr><th>SKU</th><th>Unit Price</th><th>Qty</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input class="sku" value="A1"/></td>
+            <td><input class="unitPrice" value="55.00"/></td>
+            <td><input class="qty" value="1"/></td>
+            <td><button class="danger" type="button" onclick="removeRow(this)">X</button></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="row">
+        <button type="button" onclick="addRow()">+ Ajouter un item</button>
+        <button class="primary" type="button" onclick="quote()">Calculer</button>
+      </div>
+
+      <details class="mt">
+        <summary>Voir la requête JSON envoyée</summary>
+        <pre id="payloadPreview" class="code"></pre>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Résultat</h2>
+      <div class="grid">
+        <div class="kpi"><div class="label">Subtotal</div><div id="kpiSubtotal" class="value">—</div></div>
+        <div class="kpi"><div class="label">After discounts</div><div id="kpiAfter" class="value">—</div></div>
+        <div class="kpi"><div class="label">Shipping</div><div id="kpiShip" class="value">—</div></div>
+        <div class="kpi"><div class="label">Final total</div><div id="kpiFinal" class="value">—</div></div>
+      </div>
+
+      <h3>Réponse JSON</h3>
+      <pre id="result" class="code">—</pre>
+
+      <h3>Erreurs</h3>
+      <pre id="errors" class="code error">—</pre>
+    </div>
+
+    <div class="footer muted">
+      Endpoint : <code>POST /api/checkout/quote</code>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
