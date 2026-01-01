@@ -6,6 +6,7 @@ import com.acme.ecom.domain.pricing.PricingResult;
 import com.acme.ecom.domain.pricing.PricingService;
 
 public final class CheckoutService {
+
     private final PricingService pricingService;
 
     public CheckoutService(PricingService pricingService) {

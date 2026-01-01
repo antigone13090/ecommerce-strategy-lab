@@ -4,14 +4,12 @@ import com.acme.ecom.application.CheckoutService;
 import com.acme.ecom.domain.model.Cart;
 import com.acme.ecom.domain.model.CartItem;
 import com.acme.ecom.domain.money.Money;
-import com.acme.ecom.domain.pricing.CheckoutContext;
-import com.acme.ecom.domain.pricing.DeliveryMode;
-import com.acme.ecom.domain.pricing.LoyaltyTier;
-import com.acme.ecom.domain.pricing.PricingResult;
+import com.acme.ecom.domain.pricing.*;
 import com.acme.ecom.web.dto.QuoteRequest;
-import jakarta.validation.Valid;
+import com.acme.ecom.web.dto.QuoteResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -25,28 +23,34 @@ public class CheckoutController {
     }
 
     @PostMapping("/quote")
-    public PricingResult quote(@Valid @RequestBody QuoteRequest req) {
-        List<CartItem> items = req.items.stream()
-                .map(i -> new CartItem(i.sku, Money.of(i.unitPrice), i.qty, (i.weightGrams==null?0:i.weightGrams)))
-                .toList();
+    public QuoteResponse quote(@RequestBody QuoteRequest req) {
 
+        // items -> Cart
+        List<CartItem> items = new ArrayList<>();
+        if (req.items() != null) {
+            for (QuoteRequest.Item it : req.items()) {
+                if (it == null) continue;
+                int w = (it.weightGrams() == null) ? 0 : it.weightGrams();
+                items.add(new CartItem(it.sku(), Money.of(it.unitPrice()), it.qty(), w));
+            }
+        }
         Cart cart = new Cart(items);
 
-        LoyaltyTier tier = LoyaltyTier.NONE;
-        if (req.loyaltyTier != null && !req.loyaltyTier.isBlank()) {
-            tier = LoyaltyTier.valueOf(req.loyaltyTier.trim().toUpperCase());
+        // champs request + defaults
+        String country = (req.country() == null || req.country().isBlank()) ? "OTHER" : req.country().trim().toUpperCase();
+        DeliveryMode mode = (req.deliveryMode() == null) ? DeliveryMode.STANDARD : req.deliveryMode();
+        LoyaltyTier tier = (req.loyaltyTier() == null) ? LoyaltyTier.NONE : req.loyaltyTier();
+        PaymentMethod pm = (req.paymentMethod() == null) ? PaymentMethod.CARD : req.paymentMethod();
+
+        // promoCodes : nouvelle liste sinon fallback promoCode
+        List<String> codes = (req.promoCodes() != null) ? req.promoCodes() : List.of();
+        if (codes.isEmpty() && req.promoCode() != null && !req.promoCode().isBlank()) {
+            codes = List.of(req.promoCode());
         }
 
-        String promo = (req.promoCode == null) ? "" : req.promoCode.trim();
-        String country = (req.country == null || req.country.isBlank()) ? "FR" : req.country.trim().toUpperCase();
+        CheckoutContext ctx = new CheckoutContext(country, mode, tier, codes, pm);
 
-        DeliveryMode mode = DeliveryMode.STANDARD;
-        if (req.deliveryMode != null && !req.deliveryMode.isBlank()) {
-            mode = DeliveryMode.valueOf(req.deliveryMode.trim().toUpperCase());
-        }
-
-        CheckoutContext ctx = new CheckoutContext(tier, promo, country, mode);
-
-return checkoutService.quote(cart, ctx);
+        PricingResult result = checkoutService.quote(cart, ctx);
+        return QuoteResponse.from(result);
     }
 }
