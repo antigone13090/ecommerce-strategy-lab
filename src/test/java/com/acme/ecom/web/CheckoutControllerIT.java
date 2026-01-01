@@ -40,8 +40,7 @@ class CheckoutControllerIT {
 
         assertEquals(200, res.statusCode());
 
-        String json = res.body();
-        assertNotNull(json);
+        String json = res.body();assertNotNull(json);
 
         // Assertions simples (robustes)
         assertTrue(json.contains("\"totalAfterDiscounts\":51.30"));
