@@ -1,13 +1,14 @@
 package com.acme.ecom.config;
 
 import com.acme.ecom.application.CheckoutService;
-import java.util.Map;
 import com.acme.ecom.domain.money.Money;
 import com.acme.ecom.domain.pricing.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class PricingConfig {
@@ -27,15 +28,37 @@ public class PricingConfig {
         return new WeightZoneShippingAfterDiscountsStrategy(Money.of("50.00"));
     }
 
+    @Bean
+    public TaxStrategy taxStrategy() {
+        return new VatByCountryTaxStrategy(
+                Map.of(
+                        "FR", new BigDecimal("0.20"),
+                        "EU", new BigDecimal("0.21"),
+                        "OTHER", new BigDecimal("0.00")
+                ),
+                new BigDecimal("0.20")
+        );
+    }
 
+    @Bean
+    public PaymentFeeStrategy paymentFeeStrategy() {
+        return new PaymentFeeByMethodStrategy();
+    }
 
     @Bean
     public PricingService pricingService(
             DiscountStrategy loyaltyDiscountStrategy,
             DiscountStrategy promoCodeDiscountStrategy,
-            ShippingStrategy shippingStrategy
+            ShippingStrategy shippingStrategy,
+            TaxStrategy taxStrategy,
+            PaymentFeeStrategy paymentFeeStrategy
     ) {
-        return new PricingService(List.of(loyaltyDiscountStrategy, promoCodeDiscountStrategy), shippingStrategy);
+        return new PricingService(
+                List.of(loyaltyDiscountStrategy, promoCodeDiscountStrategy),
+                shippingStrategy,
+                taxStrategy,
+                paymentFeeStrategy
+        );
     }
 
     @Bean
